@@ -23,7 +23,7 @@ public class SimpleGangWar : Script {
     private static int accuracyEnemies = 5;
 
     private static int maxPedsPerTeam = 10;
-    private static Keys hotkey = Keys.X;
+    private static Keys hotkey = Keys.F9;
     private static Keys spawnHotkey = Keys.Z;
     private static bool noWantedLevel = true;
     private static bool showBlipsOnPeds = true;
@@ -31,7 +31,7 @@ public class SimpleGangWar : Script {
     private static bool removeDeadPeds = true;
     private static bool processOtherRelationshipGroups = false;
     private static int idleInterval = 500;
-    private static int battleInterval = 100;
+    private static int battleInterval = 500;
     private static int maxPedsAllies;
     private static int maxPedsEnemies;
 

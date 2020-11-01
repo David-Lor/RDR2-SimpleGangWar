@@ -16,7 +16,7 @@ The main differences with the GTA V version are: no armor, no combat movement, n
 
 ## Usage
 
-The key `X` ("Hotkey") is used to navigate through all the steps of the script. In-game help popups will describe what to do, but these are the different stages you will find:
+The key `F9` ("Hotkey") is used to navigate through all the steps of the script. In-game help popups will describe what to do, but these are the different stages you will find:
 
 1. The script will ask you to move to where the enemies will spawn
 2. After pressing the hotkey, you must do the same to define where the allies will spawn
@@ -74,5 +74,7 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
 
 ## Changelog
 
+- 0.0.2
+    - Change default hotkey to F9, and default battle loop interval to 500ms
 - 0.0.1
     - Initial release (from [GTAV-SimpleGangWar 2.1.1](https://github.com/David-Lor/GTAV-SimpleGangWar/releases/tag/2.1.1))
