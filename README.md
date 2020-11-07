@@ -75,6 +75,7 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
 ## Changelog
 
 - 0.2.1
+    - Fix: multiply factor for fighting distance between spawnpoints (might improve the fighting distance of peds)
     - Fix: make blips blink when spawning is paused & set better blip models for spawnpoints
 - 0.1.1
     - Fix: avoid allies from attacking player

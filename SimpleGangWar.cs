@@ -313,7 +313,7 @@ public class SimpleGangWar : Script {
     /// <param name="ped">ped to process</param>
     private void SetPedTask(Ped ped) {
         ped.Task.ClearAllImmediately();
-        ped.Task.FightAgainstHatedTargets(spawnpointsDistance);
+        ped.Task.FightAgainstHatedTargets(spawnpointsDistance * fightDistanceMultiplier);
         ped.AlwaysKeepTask = true;
     }
 
