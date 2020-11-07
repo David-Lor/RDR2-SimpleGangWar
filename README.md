@@ -74,6 +74,8 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
 
 ## Changelog
 
+- 0.1.1
+    - Fix: avoid allies from attacking player
 - 0.0.2
     - Change default hotkey to F9, and default battle loop interval to 500ms
 - 0.0.1
