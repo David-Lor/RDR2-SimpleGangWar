@@ -57,9 +57,8 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
 
 ## Known bugs
 
-- Ally peds can "switch sides" when no enemies remain, and start shooting the player and other peds in ally team.
-  As the ped is still set as an ally, it cannot be shot by the player (only damaged collaterally, with fire or explosives).
 - Enabling "ProcessOtherRelationshipGroups" might cause the game to crash.
+- Peds will not fight when spawnpoints are too far away, or in a slope.
 
 ## TODO
 
