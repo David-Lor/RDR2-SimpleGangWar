@@ -218,6 +218,7 @@ public class SimpleGangWar : Script {
         List<Ped> spawnedPedsList = alliedTeam ? spawnedAllies : spawnedEnemies;
         int maxPeds = alliedTeam ? maxPedsAllies : maxPedsEnemies;
 
+        //if (spawnEnabled && spawnedPedsList.Count < maxPeds) {
         while (spawnEnabled && spawnedPedsList.Count < maxPeds) {
             SpawnRandomPed(alliedTeam);
         }
@@ -257,18 +258,20 @@ public class SimpleGangWar : Script {
             blip.Label = alliedTeam ? "Ally team member" : "Enemy team member";
         }
 
-        ped.Task.ClearAllImmediately();
-        ped.AlwaysKeepTask = true;
+        SetPedTask(ped);
         (alliedTeam ? spawnedAllies : spawnedEnemies).Add(ped);
 
         return ped;
     }
 
     /// <summary>
-    /// Processes the spawned peds of the given team. This includes making sure they fight and process their removal as they are killed in action.
+    /// Processes the spawned peds of the given team, featuring:
+    ///   - Deleting dead peds
+    ///   - Avoiding allies from attacking the player, by resetting their task
     /// </summary>
     /// <param name="alliedTeam">true=ally team / false=enemy team</param>
     private void ProcessSpawnedPeds(bool alliedTeam) {
+        Ped player = Game.Player.Character;
         List<Ped> pedList = alliedTeam ? spawnedAllies : spawnedEnemies;
 
         foreach (Ped ped in pedList) {
@@ -277,8 +280,11 @@ public class SimpleGangWar : Script {
                 pedsRemove.Add(ped);
                 deadPeds.Add(ped);
                 if (removeDeadPeds) ped.MarkAsNoLongerNeeded();
-            } else if (ped.IsIdle && !ped.IsRunning) {
-                ped.Task.FightAgainstHatedTargets(spawnpointsDistance);
+            } else {
+                // Avoid allies from attacking player
+                if (alliedTeam && ped.IsInCombatAgainst(player)) {
+                    SetPedTask(ped);
+                }
             }
         }
 
@@ -287,6 +293,17 @@ public class SimpleGangWar : Script {
         }
 
         pedsRemove.Clear();
+    }
+
+    /// <summary>
+    /// Set the task to the given ped, to start fighting against hated targets within the spawnpoint distance.
+    /// This method clears the current ped task, so can be used to reset rogue peds.
+    /// </summary>
+    /// <param name="ped">ped to process</param>
+    private void SetPedTask(Ped ped) {
+        ped.Task.ClearAllImmediately();
+        ped.Task.FightAgainstHatedTargets(spawnpointsDistance);
+        ped.AlwaysKeepTask = true;
     }
 
     /// <summary>
