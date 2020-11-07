@@ -36,6 +36,7 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
 
 - `Models`: list of ped models ([Reference](https://github.com/Saltyq/ScriptHookRDR2DotNet/blob/master/source/scripting_v3/RDR2/Entities/Peds/PedHash.cs))
 - `Weapons`: list of ped weapons ([Reference](https://github.com/Saltyq/ScriptHookRDR2DotNet/blob/2d3fbb501bc138554fd42aca9e12aba4c763f0f9/source/scripting_v3/RDR2/Weapons/Weapon.cs#L103))
+  (Optional; if not set, peds on the team will use their in-game default weapons, and no other weapons are given)
 - `Health`: health for peds
 - `Accuracy`: accuracy for peds
 - `MaxPeds`: maximum alive peds on the team (if not specified, the MaxPedsPerTeam setting will be used)
@@ -62,8 +63,6 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
 
 ## TODO
 
-- Set better blips for spawnpoints and peds
-- Make spawnpoint blips blink (it depends on their type/sprite?)
 - Avoid spawn-killing
 - Add winning conditions
 - Smooth transition from battle end to cleanup (extra step?)
@@ -73,6 +72,11 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
 
 ## Changelog
 
+- 0.2.1
+    - Refactor: parse ped models & weapons from settings on startup, instead of when spawning a ped
+    - Fix: force peds to use the weapons defined on settings. Peds on a team with no weapons defined will use the game's default ped weapons.
+    - Fix: multiply factor for fighting distance between spawnpoints (might improve the fighting distance of peds)
+    - Fix: make blips blink when spawning is paused & set better blip models for spawnpoints
 - 0.1.1
     - Fix: avoid allies from attacking player
 - 0.0.2
