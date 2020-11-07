@@ -35,6 +35,15 @@ public class SimpleGangWar : Script {
     private static int maxPedsAllies;
     private static int maxPedsEnemies;
 
+    // From here, hidden variables - can be changed only here, not exposed on the .ini file
+
+    private static float fightDistanceMultiplier = 1.5f;
+    private static BlipType spawnpointBlipType = BlipType.BLIP_STYLE_WAYPOINT;
+    private static BlipModifier spawnpointAlliesBlipColor = BlipModifier.BLIP_MODIFIER_MP_COLOR_1;  // blue
+    private static BlipModifier spawnpointEnemiesBlipColor = BlipModifier.BLIP_MODIFIER_MP_COLOR_2;  // red
+    private static BlipType pedAlliedBlipType = BlipType.BLIP_STYLE_FRIENDLY;
+    private static BlipType pedEnemyBlipType = BlipType.BLIP_STYLE_ENEMY;
+
     // From here, internal script variables - do not change!
 
     private int relationshipGroupAllies;
@@ -59,6 +68,8 @@ public class SimpleGangWar : Script {
 
     private static Relationship[] allyRelationships = { Relationship.Companion, Relationship.Like, Relationship.Respect };
     private static Relationship[] enemyRelationships = { Relationship.Hate, Relationship.Dislike };
+
+    private static BlipModifier blipModifierBlink = BlipModifier.BLIP_MODIFIER_FLASH_FOREVER;
 
     private int relationshipGroupPlayer;
     private static Random random;
@@ -253,7 +264,7 @@ public class SimpleGangWar : Script {
         ped.DropsWeaponsOnDeath = dropWeaponOnDead;
 
         if (showBlipsOnPeds) {
-            BlipType blipType = alliedTeam ? BlipType.BLIP_STYLE_FRIENDLY : BlipType.BLIP_STYLE_ENEMY;
+            BlipType blipType = alliedTeam ? pedAlliedBlipType : pedEnemyBlipType;
             Blip blip = ped.AddBlip(blipType);
             blip.Label = alliedTeam ? "Ally team member" : "Enemy team member";
         }
@@ -312,16 +323,15 @@ public class SimpleGangWar : Script {
     /// <param name="alliedTeam">true=ally team / false=enemy team</param>
     private void DefineSpawnpoint(bool alliedTeam) {
         Vector3 position = Game.Player.Character.Position;
-        BlipType blipType = alliedTeam ? BlipType.BLIP_STYLE_CAMP_ENEMY : BlipType.BLIP_STYLE_DEPUTY_RESIDENT_BASE;
-
-        Blip blip = World.CreateBlip(position, blipType);
-        blip.Label = alliedTeam ? "Ally spawnpoint" : "Enemy spawnpoint";
+        Blip blip = World.CreateBlip(position, spawnpointBlipType);
 
         if (alliedTeam) {
+            blip.ModifierAdd(spawnpointAlliesBlipColor);
             spawnpointAllies = position;
             spawnpointBlipAllies = blip;
             blip.Label = "Ally spawnpoint";
         } else {
+            blip.ModifierAdd(spawnpointEnemiesBlipColor);
             spawnpointEnemies = position;
             spawnpointBlipEnemies = blip;
             blip.Label = "Enemy spawnpoint";
@@ -336,7 +346,13 @@ public class SimpleGangWar : Script {
     /// <param name="alliedTeam">true=ally team / false=enemy team</param>
     private void BlinkSpawnpoint(bool alliedTeam) {
         Blip blip = alliedTeam ? spawnpointBlipAllies : spawnpointBlipEnemies;
-        if (blip != null) blip.IsFlashing = !spawnEnabled;
+        if (blip == null) return;
+
+        if (spawnEnabled) {
+            blip.ModifierRemove(blipModifierBlink);
+        } else {
+            blip.ModifierAdd(blipModifierBlink);
+        }
     }
 
     /// <summary>
