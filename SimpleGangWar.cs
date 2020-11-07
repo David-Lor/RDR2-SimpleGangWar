@@ -11,10 +11,10 @@ public class SimpleGangWar : Script {
 
     // Peds: https://github.com/Saltyq/ScriptHookRDR2DotNet/blob/master/source/scripting_v3/RDR2/Entities/Peds/PedHash.cs
     // Weapons: https://github.com/Saltyq/ScriptHookRDR2DotNet/blob/2d3fbb501bc138554fd42aca9e12aba4c763f0f9/source/scripting_v3/RDR2/Weapons/Weapon.cs#L103
-    private static string[] pedsAllies = { "G_M_M_UniAfricanAmericanGang_01", "G_M_M_UniCriminals_01", "G_M_M_UniCriminals_02", "G_M_M_UniGrays_01", "G_M_M_UniGrays_02" };
-    private static string[] weaponsAllies = { "RevolverSchofield", "RevolverDoubleaction", "RepeaterWinchester", "RepeaterHenry", "PistolMauser" };
-    private static string[] pedsEnemies = { "U_M_M_ValSheriff_01", "S_M_M_Army_01", "S_M_Y_Army_01" };
-    private static string[] weaponsEnemies = { "RevolverSchofield", "RevolverDoubleaction", "RepeaterWinchester", "RepeaterHenry", "PistolMauser" };
+    private static string[] pedsAlliesHashesStrings = { "G_M_M_UniAfricanAmericanGang_01", "G_M_M_UniCriminals_01", "G_M_M_UniCriminals_02", "G_M_M_UniGrays_01", "G_M_M_UniGrays_02" };
+    private static string[] weaponsAlliesHashesStrings = { };
+    private static string[] pedsEnemiesHashesStrings = { "U_M_M_ValSheriff_01", "S_M_M_Army_01", "S_M_Y_Army_01" };
+    private static string[] weaponsEnemiesHashesStrings = { };
     private static readonly char[] StringSeparators = { ',', ';' };
 
     private static int healthAllies = 120;
@@ -45,6 +45,11 @@ public class SimpleGangWar : Script {
     private static BlipType pedEnemyBlipType = BlipType.BLIP_STYLE_ENEMY;
 
     // From here, internal script variables - do not change!
+
+    private List<PedHash> pedsAlliesHashes;
+    private List<WeaponHash> weaponsAlliesHashes;
+    private List<PedHash> pedsEnemiesHashes;
+    private List<WeaponHash> weaponsEnemiesHashes;
 
     private int relationshipGroupAllies;
     private int relationshipGroupEnemies;
@@ -104,14 +109,26 @@ public class SimpleGangWar : Script {
         accuracyEnemies = config.GetValue<int>(SettingsHeader.Enemies, "Accuracy", accuracyEnemies);
 
         configString = config.GetValue<string>(SettingsHeader.Allies, "Weapons", "");
-        weaponsAllies = ArrayParse(configString, weaponsAllies);
+        weaponsAlliesHashesStrings = ArrayParse(configString, weaponsAlliesHashesStrings);
+        weaponsAlliesHashes = EnumArrayParse<WeaponHash>(weaponsAlliesHashesStrings);
+
         configString = config.GetValue<string>(SettingsHeader.Enemies, "Weapons", "");
-        weaponsEnemies = ArrayParse(configString, weaponsEnemies);
+        weaponsEnemiesHashesStrings = ArrayParse(configString, weaponsEnemiesHashesStrings);
+        weaponsEnemiesHashes = EnumArrayParse<WeaponHash>(weaponsEnemiesHashesStrings);
 
         configString = config.GetValue<string>(SettingsHeader.Allies, "Models", "");
-        pedsAllies = ArrayParse(configString, pedsAllies);
+        pedsAlliesHashesStrings = ArrayParse(configString, pedsAlliesHashesStrings);
+        pedsAlliesHashes = EnumArrayParse<PedHash>(pedsAlliesHashesStrings);
+        if (pedsAlliesHashes.Count == 0) {
+            ThrowException("No valid allied ped models defined!");
+        }
+
         configString = config.GetValue<string>(SettingsHeader.Enemies, "Models", "");
-        pedsEnemies = ArrayParse(configString, pedsEnemies);
+        pedsEnemiesHashesStrings = ArrayParse(configString, pedsEnemiesHashesStrings);
+        pedsEnemiesHashes = EnumArrayParse<PedHash>(pedsEnemiesHashesStrings);
+        if (pedsEnemiesHashes.Count == 0) {
+            ThrowException("No valid enemy ped models defined!");
+        }
 
         configString = config.GetValue<string>(SettingsHeader.General, "Hotkey", "");
         hotkey = EnumParse<Keys>(configString, hotkey);
@@ -144,7 +161,7 @@ public class SimpleGangWar : Script {
 
         random = new Random();
 
-        RDR2.UI.Screen.ShowSubtitle("SimpleGangWar loaded");
+        PrintSubtitle("SimpleGangWar loaded");
     }
 
 
@@ -242,21 +259,10 @@ public class SimpleGangWar : Script {
     /// <returns>The spawned ped</returns>
     private Ped SpawnRandomPed(bool alliedTeam) {
         Vector3 pedPosition = alliedTeam ? spawnpointAllies : spawnpointEnemies;
-        string pedName = RandomChoice<string>(alliedTeam ? pedsAllies : pedsEnemies);
-        string weaponName = RandomChoice<string>(alliedTeam ? weaponsAllies : weaponsEnemies);
-        PedHash pedSpawn;
-        WeaponHash weaponGive;
+        List<PedHash> pedHashes = alliedTeam ? pedsAlliesHashes : pedsEnemiesHashes;
+        PedHash pedHash = RandomChoice(pedHashes);
 
-        // TODO verify names from arrays on script startup
-        if (!Enum.TryParse<PedHash>(pedName, true, out pedSpawn)) {
-            throw new FormatException("Ped name " + pedName + " does not exist!");
-        }
-        if (!Enum.TryParse<WeaponHash>(weaponName, true, out weaponGive)) {
-            throw new FormatException("Weapon name " + weaponName + " does not exist!");
-        }
-
-        Ped ped = World.CreatePed(pedSpawn, pedPosition);
-        ped.Weapons.Give((uint)weaponGive, 1, true, true);
+        Ped ped = World.CreatePed(pedHash, pedPosition);
 
         ped.Health = ped.MaxHealth = alliedTeam ? healthAllies : healthEnemies;
         ped.Accuracy = alliedTeam ? accuracyAllies : accuracyEnemies;
@@ -270,6 +276,7 @@ public class SimpleGangWar : Script {
         }
 
         SetPedTask(ped);
+        SetPedWeapon(ped, alliedTeam);
         (alliedTeam ? spawnedAllies : spawnedEnemies).Add(ped);
 
         return ped;
@@ -296,6 +303,8 @@ public class SimpleGangWar : Script {
                 if (alliedTeam && ped.IsInCombatAgainst(player)) {
                     SetPedTask(ped);
                 }
+                // Give custom weapons to ped
+                SetPedWeapon(ped, alliedTeam);
             }
         }
 
@@ -315,6 +324,17 @@ public class SimpleGangWar : Script {
         ped.Task.ClearAllImmediately();
         ped.Task.FightAgainstHatedTargets(spawnpointsDistance * fightDistanceMultiplier);
         ped.AlwaysKeepTask = true;
+    }
+
+    private void SetPedWeapon(Ped ped, bool alliedTeam) {
+        List<WeaponHash> weaponHashes = alliedTeam ? weaponsAlliesHashes : weaponsEnemiesHashes;
+
+        if (weaponHashes.Count > 0 && !weaponHashes.Contains(ped.Weapons.Current.Hash) && !weaponHashes.Contains(ped.Weapons.BestWeapon)) {
+            WeaponHash weaponGive = RandomChoice(weaponHashes);
+            ped.Weapons.Current.Remove();
+            ped.GiveWeapon(weaponGive, 1000, true, false);
+            ped.Weapons.Current.InfiniteAmmo = true;
+        }
     }
 
     /// <summary>
@@ -432,6 +452,22 @@ public class SimpleGangWar : Script {
     }
 
     /// <summary>
+    /// Choose a random item from a given List, containing objects of type T
+    /// </summary>
+    /// <typeparam name="T">Type of objects in the List</typeparam>
+    /// <param name="list">List to choose from</param>
+    /// <returns>A random item from the List</returns>
+    private T RandomChoice<T>(List<T> list) {
+        return list[random.Next(0, list.Count)];
+    }
+
+    private EnumType? EnumParse<EnumType>(string enumKey) where EnumType : struct {
+        EnumType returnValue;
+        if (!Enum.TryParse<EnumType>(enumKey, true, out returnValue)) return null;
+        return returnValue;
+    }
+
+    /// <summary>
     /// Given a string key from an enum, return the referenced enum object.
     /// </summary>
     /// <typeparam name="EnumType">The whole enum object, to choose an option from</typeparam>
@@ -439,9 +475,22 @@ public class SimpleGangWar : Script {
     /// <param name="defaultValue">What enum option to return if the referenced enum key does not exist in the enum</param>
     /// <returns>The chosen enum option</returns>
     private EnumType EnumParse<EnumType>(string enumKey, EnumType defaultValue) where EnumType : struct {
-        EnumType returnValue;
-        if (!Enum.TryParse<EnumType>(enumKey, true, out returnValue)) returnValue = defaultValue;
-        return returnValue;
+        EnumType? returnValue = EnumParse<EnumType>(enumKey);
+        if (returnValue == null) returnValue = defaultValue;
+        return (EnumType)returnValue;
+    }
+
+    private List<EnumType> EnumArrayParse<EnumType>(string[] enumKeys) where EnumType : struct {
+        List<EnumType> parsedValues = new List<EnumType>();
+
+        foreach (string key in enumKeys) {
+            EnumType? returnValue = EnumParse<EnumType>(key);
+            if (returnValue != null) {
+                parsedValues.Add((EnumType)returnValue);
+            }
+        }
+
+        return parsedValues;
     }
 
     /// <summary>
@@ -454,5 +503,14 @@ public class SimpleGangWar : Script {
         string[] resultArray = stringInput.Replace(" ", string.Empty).Split(StringSeparators, StringSplitOptions.RemoveEmptyEntries);
         if (resultArray.Length == 0) resultArray = defaultArray;
         return resultArray;
+    }
+
+    private void ThrowException(string message) {
+        PrintSubtitle(message);
+        throw new Exception(message);
+    }
+
+    private void PrintSubtitle(string message) {
+        RDR2.UI.Screen.ShowSubtitle(message);
     }
 }
