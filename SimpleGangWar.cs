@@ -326,6 +326,14 @@ public class SimpleGangWar : Script {
         ped.AlwaysKeepTask = true;
     }
 
+    /// <summary>
+    /// Give a weapon to the given ped on the given team, if required.
+    /// A weapon is only given if the ped does not currently have any of the weapons on the weapons array for its team.
+    /// The weapon is chosen randomly from the team weapons list. If no weapons are configured, no weapon is given.
+    /// </summary>
+    /// <param name="ped">ped to process</param>
+    /// <param name="alliedTeam">true=ally team / false=enemy team</param>
+
     private void SetPedWeapon(Ped ped, bool alliedTeam) {
         List<WeaponHash> weaponHashes = alliedTeam ? weaponsAlliesHashes : weaponsEnemiesHashes;
 
@@ -461,6 +469,12 @@ public class SimpleGangWar : Script {
         return list[random.Next(0, list.Count)];
     }
 
+    /// <summary>
+    /// Given a string key for an enum, return the referenced enum object.
+    /// </summary>
+    /// <typeparam name="EnumType">The whole enum object, to choose an option from</typeparam>
+    /// <param name="enumKey">The enum key as string</param>
+    /// <returns>The chosen enum option, or null if the given key does not match any item from the enum</returns>
     private EnumType? EnumParse<EnumType>(string enumKey) where EnumType : struct {
         EnumType returnValue;
         if (!Enum.TryParse<EnumType>(enumKey, true, out returnValue)) return null;
@@ -468,7 +482,7 @@ public class SimpleGangWar : Script {
     }
 
     /// <summary>
-    /// Given a string key from an enum, return the referenced enum object.
+    /// Given a string key for an enum, return the referenced enum object.
     /// </summary>
     /// <typeparam name="EnumType">The whole enum object, to choose an option from</typeparam>
     /// <param name="enumKey">The enum key as string</param>
@@ -480,6 +494,13 @@ public class SimpleGangWar : Script {
         return (EnumType)returnValue;
     }
 
+    /// <summary>
+    /// Given an array of string keys for an enum, return the referenced enum objects on a List.
+    /// Elements (keys) that do not match any element from the enum are not returned.
+    /// </summary>
+    /// <typeparam name="EnumType">The whole enum object, to choose an option from</typeparam>
+    /// <param name="enumKey">The enum keys as string array</param>
+    /// <returns>List of enum options</returns>
     private List<EnumType> EnumArrayParse<EnumType>(string[] enumKeys) where EnumType : struct {
         List<EnumType> parsedValues = new List<EnumType>();
 
@@ -505,11 +526,19 @@ public class SimpleGangWar : Script {
         return resultArray;
     }
 
+    /// <summary>
+    /// Throws a new Exception, with the given message. Also prints an in-game subtitle beforehand.
+    /// </summary>
+    /// <param name="message">Subtitle and Exception text</param>
     private void ThrowException(string message) {
         PrintSubtitle(message);
         throw new Exception(message);
     }
 
+    /// <summary>
+    /// Show an in-game subtitle.
+    /// </summary>
+    /// <param name="message">Subtitle text</param>
     private void PrintSubtitle(string message) {
         RDR2.UI.Screen.ShowSubtitle(message);
     }
