@@ -77,6 +77,7 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
     - Fix: force peds to use the weapons defined on settings. Peds on a team with no weapons defined will use the game's default ped weapons.
     - Fix: multiply factor for fighting distance between spawnpoints (might improve the fighting distance of peds)
     - Fix: make blips blink when spawning is paused & set better blip models for spawnpoints
+    - Add Github Workflow to create release artifact (zip with the required files only + changelog on Releases page)
 - 0.1.1
     - Fix: avoid allies from attacking player
 - 0.0.2
