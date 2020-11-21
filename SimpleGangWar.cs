@@ -34,6 +34,8 @@ public class SimpleGangWar : Script {
     private static int battleInterval = 500;
     private static int maxPedsAllies;
     private static int maxPedsEnemies;
+    private static bool spawnHorsesAllies = true;
+    private static bool spawnHorsesEnemies = true;
 
     // From here, hidden variables - can be changed only here, not exposed on the .ini file
 
@@ -57,6 +59,7 @@ public class SimpleGangWar : Script {
 
     private List<Ped> spawnedAllies = new List<Ped>();
     private List<Ped> spawnedEnemies = new List<Ped>();
+    private Dictionary<Ped, Ped> spawnedHorses = new Dictionary<Ped, Ped>();
     private List<Ped> deadPeds = new List<Ped>();
     private List<Ped> pedsRemove = new List<Ped>();
     private List<int> processedRelationshipGroups = new List<int>();
@@ -260,9 +263,16 @@ public class SimpleGangWar : Script {
     private Ped SpawnRandomPed(bool alliedTeam) {
         Vector3 pedPosition = alliedTeam ? spawnpointAllies : spawnpointEnemies;
         List<PedHash> pedHashes = alliedTeam ? pedsAlliesHashes : pedsEnemiesHashes;
+        bool spawnHorse = alliedTeam ? spawnHorsesAllies : spawnHorsesEnemies;
         PedHash pedHash = RandomChoice(pedHashes);
-
+        
         Ped ped = World.CreatePed(pedHash, pedPosition);
+        Ped horse = null;
+
+        if (spawnHorse) {
+            horse = World.CreatePed(PedHash.A_C_Horse_Ardennes_BayRoan, pedPosition);
+            spawnedHorses.Add(ped, horse);
+        }
 
         ped.Health = ped.MaxHealth = alliedTeam ? healthAllies : healthEnemies;
         ped.Accuracy = alliedTeam ? accuracyAllies : accuracyEnemies;
@@ -275,7 +285,7 @@ public class SimpleGangWar : Script {
             blip.Label = alliedTeam ? "Ally team member" : "Enemy team member";
         }
 
-        SetPedTask(ped);
+        SetPedTask(ped, horse: horse);
         SetPedWeapon(ped, alliedTeam);
         (alliedTeam ? spawnedAllies : spawnedEnemies).Add(ped);
 
@@ -284,8 +294,9 @@ public class SimpleGangWar : Script {
 
     /// <summary>
     /// Processes the spawned peds of the given team, featuring:
-    ///   - Deleting dead peds
+    ///   - Marking dead peds and their horses as no longer needed
     ///   - Avoiding allies from attacking the player, by resetting their task
+    ///   - Giving custom weapons to peds
     /// </summary>
     /// <param name="alliedTeam">true=ally team / false=enemy team</param>
     private void ProcessSpawnedPeds(bool alliedTeam) {
@@ -302,6 +313,8 @@ public class SimpleGangWar : Script {
                 // Avoid allies from attacking player
                 if (alliedTeam && ped.IsInCombatAgainst(player)) {
                     SetPedTask(ped);
+                } else if (ped.IsIdle) { // Avoid peds from being idle
+                    SetPedTask(ped);
                 }
                 // Give custom weapons to ped
                 SetPedWeapon(ped, alliedTeam);
@@ -310,6 +323,11 @@ public class SimpleGangWar : Script {
 
         foreach (Ped ped in pedsRemove) {
             pedList.Remove(ped);
+            Ped horse;
+            if (spawnedHorses.TryGetValue(ped, out horse)) {
+                horse.MarkAsNoLongerNeeded();
+                spawnedHorses.Remove(ped);
+            }
         }
 
         pedsRemove.Clear();
@@ -320,9 +338,15 @@ public class SimpleGangWar : Script {
     /// This method clears the current ped task, so can be used to reset rogue peds.
     /// </summary>
     /// <param name="ped">ped to process</param>
-    private void SetPedTask(Ped ped) {
-        ped.Task.ClearAllImmediately();
-        ped.Task.FightAgainstHatedTargets(spawnpointsDistance * fightDistanceMultiplier);
+    private void SetPedTask(Ped ped, bool clearTask = true, Ped horse = null) {
+        float fightRange = spawnpointsDistance * fightDistanceMultiplier;
+        if (clearTask) ped.Task.ClearAllImmediately();
+
+        TaskSequence sequence = new TaskSequence();
+        if (horse != null) sequence.AddTask.MountAnimal(horse);
+        sequence.AddTask.FightAgainstHatedTargets(fightRange);
+        ped.Task.PerformSequence(sequence);
+        
         ped.AlwaysKeepTask = true;
     }
 
@@ -333,7 +357,6 @@ public class SimpleGangWar : Script {
     /// </summary>
     /// <param name="ped">ped to process</param>
     /// <param name="alliedTeam">true=ally team / false=enemy team</param>
-
     private void SetPedWeapon(Ped ped, bool alliedTeam) {
         List<WeaponHash> weaponHashes = alliedTeam ? weaponsAlliesHashes : weaponsEnemiesHashes;
 
@@ -428,9 +451,11 @@ public class SimpleGangWar : Script {
         TeardownPeds(spawnedAllies);
         TeardownPeds(spawnedEnemies);
         TeardownPeds(deadPeds);
+        TeardownPeds(spawnedHorses.Values.ToList());
 
         spawnedAllies.Clear();
         spawnedEnemies.Clear();
+        spawnedHorses.Clear();
         deadPeds.Clear();
         pedsRemove.Clear();
         processedRelationshipGroups.Clear();
