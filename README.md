@@ -35,17 +35,17 @@ Settings can be defined on the `SimpleGangWar.ini` file, being the following:
 _All lists of items (models & weapons) are separated by comma (`,`) or semi-colon (`;`). Spaces and case ignored._
 
 - `Models`: list of ped models ([Reference](https://github.com/Saltyq/ScriptHookRDR2DotNet/blob/master/source/scripting_v3/RDR2/Entities/Peds/PedHash.cs))
-- `Weapons`: list of ped weapons ([Reference](https://github.com/Saltyq/ScriptHookRDR2DotNet/blob/2d3fbb501bc138554fd42aca9e12aba4c763f0f9/source/scripting_v3/RDR2/Weapons/Weapon.cs#L103))
+- `Weapons`: list of ped weapons, each ped receiving one random weapon from the list ([Reference](https://github.com/Saltyq/ScriptHookRDR2DotNet/blob/2d3fbb501bc138554fd42aca9e12aba4c763f0f9/source/scripting_v3/RDR2/Weapons/Weapon.cs#L103))
   (Optional; if not set, peds on the team will use their in-game default weapons, and no other weapons are given)
-- `Health`: health for peds
-- `Accuracy`: accuracy for peds
-- `MaxPeds`: maximum alive peds on the team (if not specified, the MaxPedsPerTeam setting will be used)
+- `Health`: health for peds on the team (Optional; if not set or zero, health for peds will not be changed)
+- `Accuracy`: accuracy for peds on the team (Optional; if not set or zero, accuracy for peds will not be changed)
+- `MaxPeds`: maximum alive peds on the team (Pseudo-Optional; if not set, the MaxPedsPerTeam setting will be used)
 
 ### SETTINGS
 
 - `Hotkey`: the single hotkey used to iterate over the script stages ([Reference](https://docs.microsoft.com/en-us/dotnet/api/system.windows.input.key?view=netcore-3.1#fields))
 - `SpawnHotkey`: hotkey used to pause/resume ped spawn in both teams ([Reference](https://docs.microsoft.com/en-us/dotnet/api/system.windows.input.key?view=netcore-3.1#fields))
-- `MaxPedsPerTeam`: maximum alive peds on each team - teams with the setting MaxPeds will ignore this option
+- `MaxPedsPerTeam`: maximum alive peds on each team (teams with the setting MaxPeds set will ignore this setting)
 - `NoWantedLevel`: if true, disable wanted level during the battle (true/false)
 - `ShowBlipsOnPeds`: if true, each spawned ped will have a blip on the map (true/false)
 - `DropWeaponOnDead`: if false, dead peds won't drop their weapons - they will remain stick to their bodies (true/false)
@@ -70,6 +70,7 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
 
 - 0.3.1
     - Remove configurable ProcessOtherRelationshipGroups setting
+    - Do not change peds health/accuracy if not configured
 - 0.2.1
     - Refactor: parse ped models & weapons from settings on startup, instead of when spawning a ped
     - Fix: force peds to use the weapons defined on settings. Peds on a team with no weapons defined will use the game's default ped weapons.

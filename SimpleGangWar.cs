@@ -17,10 +17,10 @@ public class SimpleGangWar : Script {
     private static string[] weaponsEnemiesHashesStrings = { };
     private static readonly char[] StringSeparators = { ',', ';' };
 
-    private static int healthAllies = 120;
-    private static int healthEnemies = 120;
-    private static int accuracyAllies = 5;
-    private static int accuracyEnemies = 5;
+    private static int healthAllies = -1;
+    private static int healthEnemies = -1;
+    private static int accuracyAllies = -1;
+    private static int accuracyEnemies = -1;
 
     private static int maxPedsPerTeam = 10;
     private static Keys hotkey = Keys.F9;
@@ -260,13 +260,16 @@ public class SimpleGangWar : Script {
         Vector3 pedPosition = alliedTeam ? spawnpointAllies : spawnpointEnemies;
         List<PedHash> pedHashes = alliedTeam ? pedsAlliesHashes : pedsEnemiesHashes;
         PedHash pedHash = RandomChoice(pedHashes);
+        int pedHealth = alliedTeam ? healthAllies : healthEnemies;
+        int pedAccuracy = alliedTeam ? accuracyAllies : accuracyEnemies;
 
         Ped ped = World.CreatePed(pedHash, pedPosition);
 
-        ped.Health = ped.MaxHealth = alliedTeam ? healthAllies : healthEnemies;
-        ped.Accuracy = alliedTeam ? accuracyAllies : accuracyEnemies;
         ped.RelationshipGroup = alliedTeam ? relationshipGroupAllies : relationshipGroupEnemies;
         ped.DropsWeaponsOnDeath = dropWeaponOnDead;
+
+        if (pedHealth > 0) ped.Health = ped.MaxHealth = pedHealth;
+        if (pedAccuracy > 0) ped.Accuracy = pedAccuracy;
 
         if (showBlipsOnPeds) {
             BlipType blipType = alliedTeam ? pedAlliedBlipType : pedEnemyBlipType;
@@ -338,6 +341,7 @@ public class SimpleGangWar : Script {
 
         if (weaponHashes.Count > 0 && !weaponHashes.Contains(ped.Weapons.Current.Hash) && !weaponHashes.Contains(ped.Weapons.BestWeapon)) {
             WeaponHash weaponGive = RandomChoice(weaponHashes);
+            // TODO Remove all weapons?
             ped.Weapons.Current.Remove();
             ped.GiveWeapon(weaponGive, 1000, true, false);
             ped.Weapons.Current.InfiniteAmmo = true;
