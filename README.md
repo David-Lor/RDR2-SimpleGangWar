@@ -50,15 +50,11 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
 - `ShowBlipsOnPeds`: if true, each spawned ped will have a blip on the map (true/false)
 - `DropWeaponOnDead`: if false, dead peds won't drop their weapons - they will remain stick to their bodies (true/false)
 - `RemoveDeadPeds`: if true, mark dead peds as no longer needed, making the game handle their cleanup (true/false)
-- `ProcessOtherRelationshipGroups`: (This was not tested on RDR2, and might crash your game if enabled!)
-  if true, get all relationship groups from other existing peds and match these groups with the groups of SimpleGangWar peds.
-  Set it to true if you experience the spawned peds fighting against other peds (like mission peds) when they should not be (for example, enemy peds of a mission fighting against enemy peds of SimpleGangWar).
 - `IdleInterval`: delay between loop runs, when battle is not running, in ms
 - `BattleInterval`: delay between loop runs, when battle is running, in ms
 
 ## Known bugs
 
-- Enabling "ProcessOtherRelationshipGroups" might cause the game to crash.
 - Peds will not fight when spawnpoints are too far away, or in a slope.
 
 ## TODO
@@ -72,6 +68,8 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
 
 ## Changelog
 
+- 0.3.1
+    - Remove configurable ProcessOtherRelationshipGroups setting
 - 0.2.1
     - Refactor: parse ped models & weapons from settings on startup, instead of when spawning a ped
     - Fix: force peds to use the weapons defined on settings. Peds on a team with no weapons defined will use the game's default ped weapons.

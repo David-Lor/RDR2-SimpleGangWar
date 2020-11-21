@@ -29,7 +29,6 @@ public class SimpleGangWar : Script {
     private static bool showBlipsOnPeds = true;
     private static bool dropWeaponOnDead = false;
     private static bool removeDeadPeds = true;
-    private static bool processOtherRelationshipGroups = false;
     private static int idleInterval = 500;
     private static int battleInterval = 500;
     private static int maxPedsAllies;
@@ -37,6 +36,7 @@ public class SimpleGangWar : Script {
 
     // From here, hidden variables - can be changed only here, not exposed on the .ini file
 
+    private static bool processOtherRelationshipGroups = false;  // This setting may crash the game
     private static float fightDistanceMultiplier = 1.5f;
     private static BlipType spawnpointBlipType = BlipType.BLIP_STYLE_WAYPOINT;
     private static BlipModifier spawnpointAlliesBlipColor = BlipModifier.BLIP_MODIFIER_MP_COLOR_1;  // blue
@@ -140,7 +140,6 @@ public class SimpleGangWar : Script {
         showBlipsOnPeds = config.GetValue<bool>(SettingsHeader.General, "ShowBlipsOnPeds", showBlipsOnPeds);
         dropWeaponOnDead = config.GetValue<bool>(SettingsHeader.General, "DropWeaponOnDead", dropWeaponOnDead);
         removeDeadPeds = config.GetValue<bool>(SettingsHeader.General, "RemoveDeadPeds", removeDeadPeds);
-        processOtherRelationshipGroups = config.GetValue<bool>(SettingsHeader.General, "ProcessOtherRelationshipGroups", processOtherRelationshipGroups);
         idleInterval = config.GetValue<int>(SettingsHeader.General, "IdleInterval", idleInterval);
         battleInterval = config.GetValue<int>(SettingsHeader.General, "BattleInterval", battleInterval);
 
@@ -385,6 +384,7 @@ public class SimpleGangWar : Script {
 
     /// <summary>
     /// Get all the relationship groups from foreign peds (those that are not part of SimpleGangWar), and set the relationship between these groups and the SimpleGangWar groups.
+    /// NOTE: This method may crash the game while battle runs. Currently is not supported.
     /// </summary>
     private void SetUnmanagedPedsInRelationshipGroups() {
         if (!processOtherRelationshipGroups) return;
