@@ -38,7 +38,13 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
 - `Weapons`: list of ped weapons, each ped receiving one random weapon from the list ([Reference](https://github.com/Saltyq/ScriptHookRDR2DotNet/blob/2d3fbb501bc138554fd42aca9e12aba4c763f0f9/source/scripting_v3/RDR2/Weapons/Weapon.cs#L103))
   (Optional; if not set, peds on the team will use their in-game default weapons, and no other weapons are given)
 - `Health`: health for peds on the team (Optional; if not set or zero, health for peds will not be changed)
-- `Accuracy`: accuracy for peds on the team (Optional; if not set or zero, accuracy for peds will not be changed)
+- `Accuracy`: accuracy for peds on the team (Optional; if not set, accuracy for peds will not be changed)
+- `CombatMovement`: how the peds will move through the battlefield. This can be used to make one team defend its spawnpoint, while the other team tries to attack it. One of following:
+    - `none`: do not change CombatMovement of team peds (default setting)
+	- `stationary`: not move at all
+	- `defensive`: stay near the spawnpoint and take cover
+	- `offensive`: focus on attacking the enemy team
+	- `suicidal`: more aggresive attack
 - `MaxPeds`: maximum alive peds on the team (Pseudo-Optional; if not set, the MaxPedsPerTeam setting will be used)
 
 ### SETTINGS
@@ -69,6 +75,7 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
 ## Changelog
 
 - 0.3.1
+    - Add CombatMovement setting
     - Remove configurable ProcessOtherRelationshipGroups setting
     - Do not change peds health/accuracy if not configured
 - 0.2.1

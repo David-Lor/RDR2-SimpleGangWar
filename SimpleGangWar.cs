@@ -21,6 +21,8 @@ public class SimpleGangWar : Script {
     private static int healthEnemies = -1;
     private static int accuracyAllies = -1;
     private static int accuracyEnemies = -1;
+    private static CombatMovement combatMovementAllies = CombatMovement.None;
+    private static CombatMovement combatMovementEnemies = CombatMovement.None;
 
     private static int maxPedsPerTeam = 10;
     private static Keys hotkey = Keys.F9;
@@ -79,6 +81,15 @@ public class SimpleGangWar : Script {
     private int relationshipGroupPlayer;
     private static Random random;
 
+    private enum CombatMovement {
+        None = -1,
+        Stationary = 0,
+        Defensive = 1,
+        Offensive = 2,
+        Suicidal = 3
+        // TODO setting to randomize movement for each ped?
+    }
+    
     private enum Stage {
         Initial = 0,
         DefiningEnemySpawnpoint = 1,
@@ -108,6 +119,11 @@ public class SimpleGangWar : Script {
         accuracyAllies = config.GetValue<int>(SettingsHeader.Allies, "Accuracy", accuracyAllies);
         accuracyEnemies = config.GetValue<int>(SettingsHeader.Enemies, "Accuracy", accuracyEnemies);
 
+        configString = config.GetValue<string>(SettingsHeader.Allies, "CombatMovement", "");
+        combatMovementAllies = EnumParse<CombatMovement>(configString, combatMovementAllies);
+        configString = config.GetValue<string>(SettingsHeader.Enemies, "CombatMovement", "");
+        combatMovementEnemies = EnumParse<CombatMovement>(configString, combatMovementEnemies);
+        
         configString = config.GetValue<string>(SettingsHeader.Allies, "Weapons", "");
         weaponsAlliesHashesStrings = ArrayParse(configString, weaponsAlliesHashesStrings);
         weaponsAlliesHashes = EnumArrayParse<WeaponHash>(weaponsAlliesHashesStrings);
@@ -262,6 +278,7 @@ public class SimpleGangWar : Script {
         PedHash pedHash = RandomChoice(pedHashes);
         int pedHealth = alliedTeam ? healthAllies : healthEnemies;
         int pedAccuracy = alliedTeam ? accuracyAllies : accuracyEnemies;
+        int combatMovement = (int)(alliedTeam ? combatMovementAllies : combatMovementEnemies);
 
         Ped ped = World.CreatePed(pedHash, pedPosition);
 
@@ -269,7 +286,8 @@ public class SimpleGangWar : Script {
         ped.DropsWeaponsOnDeath = dropWeaponOnDead;
 
         if (pedHealth > 0) ped.Health = ped.MaxHealth = pedHealth;
-        if (pedAccuracy > 0) ped.Accuracy = pedAccuracy;
+        if (pedAccuracy >= 0) ped.Accuracy = pedAccuracy;
+        if (combatMovement != (int)CombatMovement.None) Function.Call(Hash.SET_PED_COMBAT_MOVEMENT, ped, combatMovement);
 
         if (showBlipsOnPeds) {
             BlipType blipType = alliedTeam ? pedAlliedBlipType : pedEnemyBlipType;
@@ -503,7 +521,7 @@ public class SimpleGangWar : Script {
     /// Elements (keys) that do not match any element from the enum are not returned.
     /// </summary>
     /// <typeparam name="EnumType">The whole enum object, to choose an option from</typeparam>
-    /// <param name="enumKey">The enum keys as string array</param>
+    /// <param name="enumKeys">The enum keys as string array</param>
     /// <returns>List of enum options</returns>
     private List<EnumType> EnumArrayParse<EnumType>(string[] enumKeys) where EnumType : struct {
         List<EnumType> parsedValues = new List<EnumType>();
