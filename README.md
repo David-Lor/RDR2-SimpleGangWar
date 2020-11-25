@@ -62,6 +62,7 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
 ## Known bugs
 
 - Peds will not fight when spawnpoints are too far away, or in a slope.
+- If using Ped Damage Overhaul, peds might run away when damaged. Also peds injured on the ground will drop weapons infinitely if custom weapons are set for its team.
 
 ## TODO
 

@@ -359,7 +359,6 @@ public class SimpleGangWar : Script {
 
         if (weaponHashes.Count > 0 && !weaponHashes.Contains(ped.Weapons.Current.Hash) && !weaponHashes.Contains(ped.Weapons.BestWeapon)) {
             WeaponHash weaponGive = RandomChoice(weaponHashes);
-            // TODO Remove all weapons?
             ped.Weapons.Current.Remove();
             ped.GiveWeapon(weaponGive, 1000, true, false);
             ped.Weapons.Current.InfiniteAmmo = true;
