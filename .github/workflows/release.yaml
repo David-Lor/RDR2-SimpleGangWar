@@ -44,8 +44,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          tag_name: "${{ github.ref }}"
+          tag_name: ${{ github.ref }}
           release_name: "v${{ github.ref }}"
+          body_path: changelog_generated.md
           draft: false
           prerelease: false
       - name: Upload release asset
@@ -56,5 +57,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: "./release-artifact.zip"
-          asset_name: "RDR2-SimpleGangWar-${{ github.ref }}.zip"
+          asset_name: "RDR2-SimpleGangWar-${{ steps.get_version.outputs.VERSION }}.zip"
           asset_content_type: "application/zip"

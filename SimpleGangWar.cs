@@ -264,7 +264,7 @@ public class SimpleGangWar : Script {
 
         Ped ped = World.CreatePed(pedHash, pedPosition);
 
-        ped.Health = ped.MaxHealth = alliedTeam ? healthAllies : healthEnemies;
+        ped.Health = alliedTeam ? healthAllies : healthEnemies;
         ped.Accuracy = alliedTeam ? accuracyAllies : accuracyEnemies;
         ped.RelationshipGroup = alliedTeam ? relationshipGroupAllies : relationshipGroupEnemies;
         ped.DropsWeaponsOnDeath = dropWeaponOnDead;
