@@ -1,4 +1,4 @@
-﻿using RDR2;
+using RDR2;
 using RDR2.Native;
 using RDR2.Math;
 using System;
@@ -17,10 +17,12 @@ public class SimpleGangWar : Script {
     private static string[] weaponsEnemiesHashesStrings = { };
     private static readonly char[] StringSeparators = { ',', ';' };
 
-    private static int healthAllies = 120;
-    private static int healthEnemies = 120;
-    private static int accuracyAllies = 5;
-    private static int accuracyEnemies = 5;
+    private static int healthAllies = -1;
+    private static int healthEnemies = -1;
+    private static int accuracyAllies = -1;
+    private static int accuracyEnemies = -1;
+    private static CombatMovement combatMovementAllies = CombatMovement.None;
+    private static CombatMovement combatMovementEnemies = CombatMovement.None;
 
     private static int maxPedsPerTeam = 10;
     private static Keys hotkey = Keys.F9;
@@ -29,7 +31,8 @@ public class SimpleGangWar : Script {
     private static bool showBlipsOnPeds = true;
     private static bool dropWeaponOnDead = false;
     private static bool removeDeadPeds = true;
-    private static bool processOtherRelationshipGroups = false;
+    private static int spawnpointFloodLimitPeds = 5;
+    private static float spawnpointFloodLimitDistance = 8.0f;
     private static int idleInterval = 500;
     private static int battleInterval = 500;
     private static int maxPedsAllies;
@@ -37,6 +40,7 @@ public class SimpleGangWar : Script {
 
     // From here, hidden variables - can be changed only here, not exposed on the .ini file
 
+    private static bool processOtherRelationshipGroups = false;  // This setting may crash the game
     private static float fightDistanceMultiplier = 1.5f;
     private static BlipType spawnpointBlipType = BlipType.BLIP_STYLE_WAYPOINT;
     private static BlipModifier spawnpointAlliesBlipColor = BlipModifier.BLIP_MODIFIER_MP_COLOR_1;  // blue
@@ -79,6 +83,15 @@ public class SimpleGangWar : Script {
     private int relationshipGroupPlayer;
     private static Random random;
 
+    private enum CombatMovement {
+        None = -1,
+        Stationary = 0,
+        Defensive = 1,
+        Offensive = 2,
+        Suicidal = 3
+        // TODO setting to randomize movement for each ped?
+    }
+    
     private enum Stage {
         Initial = 0,
         DefiningEnemySpawnpoint = 1,
@@ -108,6 +121,11 @@ public class SimpleGangWar : Script {
         accuracyAllies = config.GetValue<int>(SettingsHeader.Allies, "Accuracy", accuracyAllies);
         accuracyEnemies = config.GetValue<int>(SettingsHeader.Enemies, "Accuracy", accuracyEnemies);
 
+        configString = config.GetValue<string>(SettingsHeader.Allies, "CombatMovement", "");
+        combatMovementAllies = EnumParse<CombatMovement>(configString, combatMovementAllies);
+        configString = config.GetValue<string>(SettingsHeader.Enemies, "CombatMovement", "");
+        combatMovementEnemies = EnumParse<CombatMovement>(configString, combatMovementEnemies);
+        
         configString = config.GetValue<string>(SettingsHeader.Allies, "Weapons", "");
         weaponsAlliesHashesStrings = ArrayParse(configString, weaponsAlliesHashesStrings);
         weaponsAlliesHashes = EnumArrayParse<WeaponHash>(weaponsAlliesHashesStrings);
@@ -140,7 +158,8 @@ public class SimpleGangWar : Script {
         showBlipsOnPeds = config.GetValue<bool>(SettingsHeader.General, "ShowBlipsOnPeds", showBlipsOnPeds);
         dropWeaponOnDead = config.GetValue<bool>(SettingsHeader.General, "DropWeaponOnDead", dropWeaponOnDead);
         removeDeadPeds = config.GetValue<bool>(SettingsHeader.General, "RemoveDeadPeds", removeDeadPeds);
-        processOtherRelationshipGroups = config.GetValue<bool>(SettingsHeader.General, "ProcessOtherRelationshipGroups", processOtherRelationshipGroups);
+        spawnpointFloodLimitPeds = config.GetValue<int>(SettingsHeader.General, "SpawnpointFloodLimitPeds", spawnpointFloodLimitPeds);
+        spawnpointFloodLimitDistance = config.GetValue<float>(SettingsHeader.General, "SpawnpointFloodLimitDistance", spawnpointFloodLimitDistance);
         idleInterval = config.GetValue<int>(SettingsHeader.General, "IdleInterval", idleInterval);
         battleInterval = config.GetValue<int>(SettingsHeader.General, "BattleInterval", battleInterval);
 
@@ -243,15 +262,45 @@ public class SimpleGangWar : Script {
     /// </summary>
     /// <param name="alliedTeam">true=ally team / false=enemy team</param>
     private void SpawnPeds(bool alliedTeam) {
-        List<Ped> spawnedPedsList = alliedTeam ? spawnedAllies : spawnedEnemies;
-        int maxPeds = alliedTeam ? maxPedsAllies : maxPedsEnemies;
-
         //if (spawnEnabled && spawnedPedsList.Count < maxPeds) {
-        while (spawnEnabled && spawnedPedsList.Count < maxPeds) {
+        while (spawnEnabled && CanPedsSpawn(alliedTeam, GetPedsNearSpawnpoint(alliedTeam))) {
             SpawnRandomPed(alliedTeam);
         }
     }
 
+    /// <summary>
+    /// Calculate how many peds on a team are near their defined spawnpoint, within the configured flood limit distance.
+    /// </summary>
+    /// <param name="alliedTeam">true=ally team / false=enemy team</param>
+    private int GetPedsNearSpawnpoint(bool alliedTeam) {
+        List<Ped> spawnedPedsList = alliedTeam ? spawnedAllies : spawnedEnemies;
+        Vector3 spawnpointPosition = alliedTeam ? spawnpointAllies : spawnpointEnemies;
+        int pedsNearSpawnpointCount = 0;
+
+        foreach (Ped ped in World.GetAllPeds()) {
+            if (ped.IsAlive && spawnedPedsList.Contains(ped) && World.GetDistance(ped.Position, spawnpointPosition) <= spawnpointFloodLimitDistance) pedsNearSpawnpointCount++;
+        }
+
+        return pedsNearSpawnpointCount;
+    }
+
+    /// <summary>
+    /// Determine if peds on the given team should spawn or not.
+    /// </summary>
+    /// <param name="alliedTeam">true=ally team / false=enemy team</param>
+    /// <param name="pedsNearSpawnpointCount">count of peds near the team spawnpoing, returned by GetPedsNearSpawnpoint() method</param>
+    private bool CanPedsSpawn(bool alliedTeam, int pedsNearSpawnpointCount) {
+        List<Ped> spawnedPedsList = alliedTeam ? spawnedAllies : spawnedEnemies;
+        int maxPeds = alliedTeam ? maxPedsAllies : maxPedsEnemies;
+        
+        // by MaxPeds in the team
+        if (spawnedPedsList.Count >= maxPeds) return false;
+
+        // by SpawnpointFlood limit
+        if (spawnpointFloodLimitPeds < 1) return true;
+        return pedsNearSpawnpointCount < spawnpointFloodLimitPeds;
+    }
+    
     /// <summary>
     /// Spawns a ped on the given team, ready to fight.
     /// </summary>
@@ -261,6 +310,9 @@ public class SimpleGangWar : Script {
         Vector3 pedPosition = alliedTeam ? spawnpointAllies : spawnpointEnemies;
         List<PedHash> pedHashes = alliedTeam ? pedsAlliesHashes : pedsEnemiesHashes;
         PedHash pedHash = RandomChoice(pedHashes);
+        int pedHealth = alliedTeam ? healthAllies : healthEnemies;
+        int pedAccuracy = alliedTeam ? accuracyAllies : accuracyEnemies;
+        int combatMovement = (int)(alliedTeam ? combatMovementAllies : combatMovementEnemies);
 
         Ped ped = World.CreatePed(pedHash, pedPosition);
 
@@ -268,6 +320,10 @@ public class SimpleGangWar : Script {
         ped.Accuracy = alliedTeam ? accuracyAllies : accuracyEnemies;
         ped.RelationshipGroup = alliedTeam ? relationshipGroupAllies : relationshipGroupEnemies;
         ped.DropsWeaponsOnDeath = dropWeaponOnDead;
+
+        if (pedHealth > 0) ped.Health = ped.MaxHealth = pedHealth;
+        if (pedAccuracy >= 0) ped.Accuracy = pedAccuracy;
+        if (combatMovement != (int)CombatMovement.None) Function.Call(Hash.SET_PED_COMBAT_MOVEMENT, ped, combatMovement);
 
         if (showBlipsOnPeds) {
             BlipType blipType = alliedTeam ? pedAlliedBlipType : pedEnemyBlipType;
@@ -385,6 +441,7 @@ public class SimpleGangWar : Script {
 
     /// <summary>
     /// Get all the relationship groups from foreign peds (those that are not part of SimpleGangWar), and set the relationship between these groups and the SimpleGangWar groups.
+    /// NOTE: This method may crash the game while battle runs. Currently is not supported.
     /// </summary>
     private void SetUnmanagedPedsInRelationshipGroups() {
         if (!processOtherRelationshipGroups) return;
@@ -499,7 +556,7 @@ public class SimpleGangWar : Script {
     /// Elements (keys) that do not match any element from the enum are not returned.
     /// </summary>
     /// <typeparam name="EnumType">The whole enum object, to choose an option from</typeparam>
-    /// <param name="enumKey">The enum keys as string array</param>
+    /// <param name="enumKeys">The enum keys as string array</param>
     /// <returns>List of enum options</returns>
     private List<EnumType> EnumArrayParse<EnumType>(string[] enumKeys) where EnumType : struct {
         List<EnumType> parsedValues = new List<EnumType>();

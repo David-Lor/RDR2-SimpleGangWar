@@ -35,31 +35,43 @@ Settings can be defined on the `SimpleGangWar.ini` file, being the following:
 _All lists of items (models & weapons) are separated by comma (`,`) or semi-colon (`;`). Spaces and case ignored._
 
 - `Models`: list of ped models ([Reference](https://github.com/Saltyq/ScriptHookRDR2DotNet/blob/master/source/scripting_v3/RDR2/Entities/Peds/PedHash.cs))
-- `Weapons`: list of ped weapons ([Reference](https://github.com/Saltyq/ScriptHookRDR2DotNet/blob/2d3fbb501bc138554fd42aca9e12aba4c763f0f9/source/scripting_v3/RDR2/Weapons/Weapon.cs#L103))
+- `Weapons`: list of ped weapons, each ped receiving one random weapon from the list ([Reference](https://github.com/Saltyq/ScriptHookRDR2DotNet/blob/2d3fbb501bc138554fd42aca9e12aba4c763f0f9/source/scripting_v3/RDR2/Weapons/Weapon.cs#L103))
   (Optional; if not set, peds on the team will use their in-game default weapons, and no other weapons are given)
-- `Health`: health for peds
-- `Accuracy`: accuracy for peds
-- `MaxPeds`: maximum alive peds on the team (if not specified, the MaxPedsPerTeam setting will be used)
+- `Health`: health for peds on the team (Optional; if not set or zero, health for peds will not be changed)
+- `Accuracy`: accuracy for peds on the team (Optional; if not set, accuracy for peds will not be changed)
+- `CombatMovement`: how the peds will move through the battlefield. This can be used to make one team defend its spawnpoint, while the other team tries to attack it - although it may not have a great effect. One of following:
+    - `none`: do not change CombatMovement of team peds (default setting)
+    - `stationary`: not move at all
+    - `defensive`: stay near the spawnpoint and take cover
+    - `offensive`: focus on attacking the enemy team
+    - `suicidal`: more aggresive attack
+- `MaxPeds`: maximum alive peds on the team (Pseudo-Optional; if not set, the MaxPedsPerTeam setting will be used)
 
 ### SETTINGS
 
 - `Hotkey`: the single hotkey used to iterate over the script stages ([Reference](https://docs.microsoft.com/en-us/dotnet/api/system.windows.input.key?view=netcore-3.1#fields))
 - `SpawnHotkey`: hotkey used to pause/resume ped spawn in both teams ([Reference](https://docs.microsoft.com/en-us/dotnet/api/system.windows.input.key?view=netcore-3.1#fields))
-- `MaxPedsPerTeam`: maximum alive peds on each team - teams with the setting MaxPeds will ignore this option
+- `MaxPedsPerTeam`: maximum alive peds on each team (teams with the setting MaxPeds set will ignore this setting)
 - `NoWantedLevel`: if true, disable wanted level during the battle (true/false)
 - `ShowBlipsOnPeds`: if true, each spawned ped will have a blip on the map (true/false)
 - `DropWeaponOnDead`: if false, dead peds won't drop their weapons - they will remain stick to their bodies (true/false)
 - `RemoveDeadPeds`: if true, mark dead peds as no longer needed, making the game handle their cleanup (true/false)
-- `ProcessOtherRelationshipGroups`: (This was not tested on RDR2, and might crash your game if enabled!)
-  if true, get all relationship groups from other existing peds and match these groups with the groups of SimpleGangWar peds.
-  Set it to true if you experience the spawned peds fighting against other peds (like mission peds) when they should not be (for example, enemy peds of a mission fighting against enemy peds of SimpleGangWar).
-- `IdleInterval`: delay between loop runs, when battle is not running, in ms
-- `BattleInterval`: delay between loop runs, when battle is running, in ms
+- Spawnpoint Flood Limit: there is a system that avoids peds from flooding their spawnpoints. This may happen when the battle starts, and all the maximum allowed peds spawn at once. Many peds spawning at once may lead to bugs and even game crashes. The SpawnpointFloodLimit settings avoids peds spawning when there are a certain amount of peds near their spawnpoint, at a certain distance. The settings involved are:
+    - `SpawnpointFloodLimitDistance`: radius distance from the spawnpoint to sum peds on
+    - `SpawnpointFloodLimitPeds`: if more than this amount of peds are within the Distance set, spawn will be blocked
+- Intervals: SimpleGangWar code runs in a loop, and between loop executions there is a delay.
+  This delay can be configured with the `Interval` settings, specifying time in ms.
+  The given times are valid, but may be changed to alter the behaviour of the script or to solve certain problems.
+  The higher the delay, the less responsive and slow the mod will work (which may result in slower spawn rate of peds).
+  There are two Interval settings available, depending on the context:
+    - `IdleInterval`: when battle is not 
+    - `BattleInterval`: when battle is running
 
 ## Known bugs
 
-- Enabling "ProcessOtherRelationshipGroups" might cause the game to crash.
+- The script or game may crash when battle starts. This may be caused by having too many peds spawning at once. The issue may be fixed by decreasing the SpawnpointFloodLimitPeds and/or increasing the BattleInterval.
 - Peds will not fight when spawnpoints are too far away, or in a slope.
+- If using Ped Damage Overhaul, peds might run away when damaged. Also peds injured on the ground will drop weapons infinitely if custom weapons are set for its team.
 
 ## TODO
 
@@ -72,6 +84,11 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
 
 ## Changelog
 
+- 0.3.1
+    - Add CombatMovement setting
+    - Remove configurable ProcessOtherRelationshipGroups setting
+    - Do not change peds health/accuracy if not configured
+    - Avoid spawnpoint flooding
 - 0.2.2
     - Fix: remove change on ped MaxHealth, as it might be causing NullPointerException
 - 0.2.1
