@@ -88,6 +88,8 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
     - Remove configurable ProcessOtherRelationshipGroups setting
     - Do not change peds health/accuracy if not configured
     - Avoid spawnpoint flooding
+- 0.2.2
+    - Fix: remove change on ped MaxHealth, as it might be causing NullPointerException
 - 0.2.1
     - Refactor: parse ped models & weapons from settings on startup, instead of when spawning a ped
     - Fix: force peds to use the weapons defined on settings. Peds on a team with no weapons defined will use the game's default ped weapons.

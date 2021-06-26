@@ -1,4 +1,4 @@
-﻿using RDR2;
+using RDR2;
 using RDR2.Native;
 using RDR2.Math;
 using System;
@@ -316,6 +316,8 @@ public class SimpleGangWar : Script {
 
         Ped ped = World.CreatePed(pedHash, pedPosition);
 
+        ped.Health = alliedTeam ? healthAllies : healthEnemies;
+        ped.Accuracy = alliedTeam ? accuracyAllies : accuracyEnemies;
         ped.RelationshipGroup = alliedTeam ? relationshipGroupAllies : relationshipGroupEnemies;
         ped.DropsWeaponsOnDeath = dropWeaponOnDead;
 
