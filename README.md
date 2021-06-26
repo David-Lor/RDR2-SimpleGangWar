@@ -39,12 +39,12 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
   (Optional; if not set, peds on the team will use their in-game default weapons, and no other weapons are given)
 - `Health`: health for peds on the team (Optional; if not set or zero, health for peds will not be changed)
 - `Accuracy`: accuracy for peds on the team (Optional; if not set, accuracy for peds will not be changed)
-- `CombatMovement`: how the peds will move through the battlefield. This can be used to make one team defend its spawnpoint, while the other team tries to attack it. One of following:
+- `CombatMovement`: how the peds will move through the battlefield. This can be used to make one team defend its spawnpoint, while the other team tries to attack it - although it may not have a great effect. One of following:
     - `none`: do not change CombatMovement of team peds (default setting)
-	- `stationary`: not move at all
-	- `defensive`: stay near the spawnpoint and take cover
-	- `offensive`: focus on attacking the enemy team
-	- `suicidal`: more aggresive attack
+    - `stationary`: not move at all
+    - `defensive`: stay near the spawnpoint and take cover
+    - `offensive`: focus on attacking the enemy team
+    - `suicidal`: more aggresive attack
 - `MaxPeds`: maximum alive peds on the team (Pseudo-Optional; if not set, the MaxPedsPerTeam setting will be used)
 
 ### SETTINGS
@@ -56,8 +56,13 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
 - `ShowBlipsOnPeds`: if true, each spawned ped will have a blip on the map (true/false)
 - `DropWeaponOnDead`: if false, dead peds won't drop their weapons - they will remain stick to their bodies (true/false)
 - `RemoveDeadPeds`: if true, mark dead peds as no longer needed, making the game handle their cleanup (true/false)
-- `IdleInterval`: delay between loop runs, when battle is not running, in ms
-- `BattleInterval`: delay between loop runs, when battle is running, in ms
+- Intervals: SimpleGangWar code runs in a loop, and between loop executions there is a delay.
+  This delay can be configured with the `Interval` settings, specifying time in ms.
+  The given times are valid, but may be changed to alter the behaviour of the script or to solve certain problems.
+  The higher the delay, the less responsive and slow the mod will work (which may result in slower spawn rate of peds).
+  There are two Interval settings available, depending on the context:
+    - `IdleInterval`: when battle is not 
+    - `BattleInterval`: when battle is running
 
 ## Known bugs
 
