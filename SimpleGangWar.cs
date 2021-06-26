@@ -31,6 +31,8 @@ public class SimpleGangWar : Script {
     private static bool showBlipsOnPeds = true;
     private static bool dropWeaponOnDead = false;
     private static bool removeDeadPeds = true;
+    private static int spawnpointFloodLimitPeds = 5;
+    private static float spawnpointFloodLimitDistance = 8.0f;
     private static int idleInterval = 500;
     private static int battleInterval = 500;
     private static int maxPedsAllies;
@@ -156,6 +158,8 @@ public class SimpleGangWar : Script {
         showBlipsOnPeds = config.GetValue<bool>(SettingsHeader.General, "ShowBlipsOnPeds", showBlipsOnPeds);
         dropWeaponOnDead = config.GetValue<bool>(SettingsHeader.General, "DropWeaponOnDead", dropWeaponOnDead);
         removeDeadPeds = config.GetValue<bool>(SettingsHeader.General, "RemoveDeadPeds", removeDeadPeds);
+        spawnpointFloodLimitPeds = config.GetValue<int>(SettingsHeader.General, "SpawnpointFloodLimitPeds", spawnpointFloodLimitPeds);
+        spawnpointFloodLimitDistance = config.GetValue<float>(SettingsHeader.General, "SpawnpointFloodLimitDistance", spawnpointFloodLimitDistance);
         idleInterval = config.GetValue<int>(SettingsHeader.General, "IdleInterval", idleInterval);
         battleInterval = config.GetValue<int>(SettingsHeader.General, "BattleInterval", battleInterval);
 
@@ -258,15 +262,45 @@ public class SimpleGangWar : Script {
     /// </summary>
     /// <param name="alliedTeam">true=ally team / false=enemy team</param>
     private void SpawnPeds(bool alliedTeam) {
-        List<Ped> spawnedPedsList = alliedTeam ? spawnedAllies : spawnedEnemies;
-        int maxPeds = alliedTeam ? maxPedsAllies : maxPedsEnemies;
-
         //if (spawnEnabled && spawnedPedsList.Count < maxPeds) {
-        while (spawnEnabled && spawnedPedsList.Count < maxPeds) {
+        while (spawnEnabled && CanPedsSpawn(alliedTeam, GetPedsNearSpawnpoint(alliedTeam))) {
             SpawnRandomPed(alliedTeam);
         }
     }
 
+    /// <summary>
+    /// Calculate how many peds on a team are near their defined spawnpoint, within the configured flood limit distance.
+    /// </summary>
+    /// <param name="alliedTeam">true=ally team / false=enemy team</param>
+    private int GetPedsNearSpawnpoint(bool alliedTeam) {
+        List<Ped> spawnedPedsList = alliedTeam ? spawnedAllies : spawnedEnemies;
+        Vector3 spawnpointPosition = alliedTeam ? spawnpointAllies : spawnpointEnemies;
+        int pedsNearSpawnpointCount = 0;
+
+        foreach (Ped ped in World.GetAllPeds()) {
+            if (ped.IsAlive && spawnedPedsList.Contains(ped) && World.GetDistance(ped.Position, spawnpointPosition) <= spawnpointFloodLimitDistance) pedsNearSpawnpointCount++;
+        }
+
+        return pedsNearSpawnpointCount;
+    }
+
+    /// <summary>
+    /// Determine if peds on the given team should spawn or not.
+    /// </summary>
+    /// <param name="alliedTeam">true=ally team / false=enemy team</param>
+    /// <param name="pedsNearSpawnpointCount">count of peds near the team spawnpoing, returned by GetPedsNearSpawnpoint() method</param>
+    private bool CanPedsSpawn(bool alliedTeam, int pedsNearSpawnpointCount) {
+        List<Ped> spawnedPedsList = alliedTeam ? spawnedAllies : spawnedEnemies;
+        int maxPeds = alliedTeam ? maxPedsAllies : maxPedsEnemies;
+        
+        // by MaxPeds in the team
+        if (spawnedPedsList.Count >= maxPeds) return false;
+
+        // by SpawnpointFlood limit
+        if (spawnpointFloodLimitPeds < 1) return true;
+        return pedsNearSpawnpointCount < spawnpointFloodLimitPeds;
+    }
+    
     /// <summary>
     /// Spawns a ped on the given team, ready to fight.
     /// </summary>

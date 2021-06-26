@@ -56,6 +56,9 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
 - `ShowBlipsOnPeds`: if true, each spawned ped will have a blip on the map (true/false)
 - `DropWeaponOnDead`: if false, dead peds won't drop their weapons - they will remain stick to their bodies (true/false)
 - `RemoveDeadPeds`: if true, mark dead peds as no longer needed, making the game handle their cleanup (true/false)
+- Spawnpoint Flood Limit: there is a system that avoids peds from flooding their spawnpoints. This may happen when the battle starts, and all the maximum allowed peds spawn at once. Many peds spawning at once may lead to bugs and even game crashes. The SpawnpointFloodLimit settings avoids peds spawning when there are a certain amount of peds near their spawnpoint, at a certain distance. The settings involved are:
+    - `SpawnpointFloodLimitDistance`: radius distance from the spawnpoint to sum peds on
+    - `SpawnpointFloodLimitPeds`: if more than this amount of peds are within the Distance set, spawn will be blocked
 - Intervals: SimpleGangWar code runs in a loop, and between loop executions there is a delay.
   This delay can be configured with the `Interval` settings, specifying time in ms.
   The given times are valid, but may be changed to alter the behaviour of the script or to solve certain problems.
@@ -84,6 +87,7 @@ _All lists of items (models & weapons) are separated by comma (`,`) or semi-colo
     - Add CombatMovement setting
     - Remove configurable ProcessOtherRelationshipGroups setting
     - Do not change peds health/accuracy if not configured
+    - Avoid spawnpoint flooding
 - 0.2.1
     - Refactor: parse ped models & weapons from settings on startup, instead of when spawning a ped
     - Fix: force peds to use the weapons defined on settings. Peds on a team with no weapons defined will use the game's default ped weapons.
